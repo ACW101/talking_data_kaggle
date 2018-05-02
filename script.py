@@ -88,7 +88,24 @@ def do_var( df, group_cols, counted, agg_name, agg_type='float32', show_max=Fals
     gc.collect()
     return( df )
 
-debug=0 
+def do_attributed_prob(train_df, features):
+    grouped = train_df.groupby(features)
+    log_base = np.log(100000)
+    new_feature = '_'.join(features) + "_attributed_rate"
+    def rate_calculation(x):
+        rate = x.sum() / float(x.count())
+        conf = np.min([1, np.log(x.count()) / log_base])
+        return rate * conf
+
+    return train_df.merge(
+            grouped['is_attributed']. \
+                    apply(rate_calculation). \
+                    reset_index(). \
+                    rename(index=None, columns={'is_attributed': new_feature})[features + [new_feature]],
+                on=features, how='left'
+            )
+
+debug=1 
 if debug:
     print('*** debug parameter set: this is a test run for debugging purposes ***')
 
@@ -195,6 +212,14 @@ def DO(frm,to,fileno):
     train_df = do_var( train_df, ['ip', 'app', 'os'], 'hour', 'ip_app_os_var', show_max=True ); gc.collect()
     train_df = do_var( train_df, ['ip', 'app', 'channel'], 'day', 'ip_app_channel_var_day', show_max=True ); gc.collect()
     train_df = do_mean( train_df, ['ip', 'app', 'channel'], 'hour', 'ip_app_channel_mean_hour', show_max=True ); gc.collect()
+    train_df = do_attributed_prob( train_df, ['ip']); gc.collect()
+    train_df = do_attributed_prob( train_df, ['app']); gc.collect()
+    train_df = do_attributed_prob( train_df, ['device']); gc.collect()
+    train_df = do_attributed_prob( train_df, ['os']); gc.collect()
+    train_df = do_attributed_prob( train_df, ['channel']); gc.collect()
+
+    print(train_df.columns)
+
 
     print('doing nextClick')
     predictors=[]
