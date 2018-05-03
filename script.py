@@ -28,6 +28,60 @@ import gc
 import matplotlib.pyplot as plt
 import os
 
+def featurize(X_train):
+
+    GROUPBY_AGGREGATIONS = [
+        {'groupby': ['ip','day','hour'], 'select': 'minute', 'agg': 'nunique'},
+        {'groupby': ['ip','day','hour'], 'select': 'minute', 'agg': 'count'},
+        {'groupby': ['ip','day','hour','minute'], 'select': 'second', 'agg': 'nunique'},
+        {'groupby': ['ip','day','hour','minute'], 'select': 'second', 'agg': 'count'},
+        {'groupby': ['ip','day','device'], 'select': 'click_time', 'agg': 'count'},
+        {'groupby': ['ip','day','device'], 'select': 'click_time', 'agg': 'nunique'},
+        {'groupby': ['ip','day','device'], 'select': 'app', 'agg': 'count'},
+        {'groupby': ['ip','day','device'], 'select': 'app', 'agg': 'nunique'},
+        {'groupby': ['ip','day','device'], 'select': 'os', 'agg': 'nunique'},
+        {'groupby': ['ip','day','device'], 'select': 'channel', 'agg': 'nunique'},
+        {'groupby': ['ip','day','hour','minute','second'], 'select': 'app', 'agg': 'nunique'},
+        {'groupby': ['ip','day','hour','minute','second'], 'select': 'app', 'agg': 'count'},
+        {'groupby': ['ip','day','hour','minute','second'], 'select': 'click_time', 'agg': 'count'},
+        {'groupby': ['ip','day','hour','minute','second'], 'select': 'os', 'agg': 'count'}
+        {'groupby': ['ip','day','hour'],'select':'click_time','agg':'count'}
+    ]
+
+
+    for spec in GROUPBY_AGGREGATIONS:
+    
+        # Name of the aggregation we're applying
+        agg_name = spec['agg_name'] if 'agg_name' in spec else spec['agg']
+    
+        # Name of new feature
+        new_feature = '{}_{}_{}'.format('_'.join(spec['groupby']), agg_name, spec['select'])
+    
+        # Info
+        print("Grouping by {}, and aggregating {} with {}".format(
+            spec['groupby'], spec['select'], agg_name
+        ))
+    
+        # Unique list of features to select
+        all_features = list(set(spec['groupby'] + [spec['select']]))
+    
+        # Perform the groupby
+        gp = X_train[all_features]. \
+            groupby(spec['groupby'])[spec['select']]. \
+            agg(spec['agg']). \
+            reset_index(). \
+            rename(index=str, columns={spec['select']: new_feature})
+        
+        # Merge back to X_total
+        if 'cumcount' == spec['agg']:
+            X_train[new_feature] = gp[0].values
+        else:
+            X_train = X_train.merge(gp, on=spec['groupby'], how='left')
+        
+         # Clear memory
+        del gp
+        gc.collect()
+	
 def do_count( df, group_cols, agg_name, agg_type='uint32', show_max=False, show_agg=True ):
     if show_agg:
         print( "Aggregating by ", group_cols , '...' )
@@ -87,6 +141,15 @@ def do_var( df, group_cols, counted, agg_name, agg_type='float32', show_max=Fals
     df[agg_name] = df[agg_name].astype(agg_type)
     gc.collect()
     return( df )
+
+def feat_ratio(df):
+    df['ip_day_minuteR'] = df['ip_day_count_minute']/df['ip_day_nunique_minute']
+    df['ip_day_secondR'] = df['ip_day_count_second']/df['ip_day_nunique_second']
+    df['ip_day_device_click_timeR'] = df['ip_day_device_count_click_time']/df['ip_day_device_nunique_click_time']
+    df['ip_day_device_appR'] = df['ip_day_device_count_app']/df['ip_day_device_nunique_app']
+    df['ip_day_device_appChannelR'] = df['ip_day_device_nunique_app']/df['ip_day_device_nunique_channel']
+    df['ip_day_minute_second_appR'] = df['ip_day_minute_second_nunique_app']/df['ip_day_minute_second_count_app']
+    
 
 def do_attributed_prob(train_df, features):
     grouped = train_df.groupby(features)
@@ -217,7 +280,6 @@ def DO(frm,to,fileno):
     train_df = do_attributed_prob( train_df, ['device']); gc.collect()
     train_df = do_attributed_prob( train_df, ['os']); gc.collect()
     train_df = do_attributed_prob( train_df, ['channel']); gc.collect()
-
 
 
     print('doing nextClick')
