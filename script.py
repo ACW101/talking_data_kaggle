@@ -35,17 +35,17 @@ def featurize(X_train):
         {'groupby': ['ip','day','hour'], 'select': 'minute', 'agg': 'count'},
         {'groupby': ['ip','day','hour','minute'], 'select': 'second', 'agg': 'nunique'},
         {'groupby': ['ip','day','hour','minute'], 'select': 'second', 'agg': 'count'},
-        {'groupby': ['ip','day','device'], 'select': 'click_time', 'agg': 'count'},
-        {'groupby': ['ip','day','device'], 'select': 'click_time', 'agg': 'nunique'},
-        {'groupby': ['ip','day','device'], 'select': 'app', 'agg': 'count'},
-        {'groupby': ['ip','day','device'], 'select': 'app', 'agg': 'nunique'},
-        {'groupby': ['ip','day','device'], 'select': 'os', 'agg': 'nunique'},
-        {'groupby': ['ip','day','device'], 'select': 'channel', 'agg': 'nunique'},
-        {'groupby': ['ip','day','hour','minute','second'], 'select': 'app', 'agg': 'nunique'},
-        {'groupby': ['ip','day','hour','minute','second'], 'select': 'app', 'agg': 'count'},
-        {'groupby': ['ip','day','hour','minute','second'], 'select': 'click_time', 'agg': 'count'},
-        {'groupby': ['ip','day','hour','minute','second'], 'select': 'os', 'agg': 'count'},
-        {'groupby': ['ip','day','hour'],'select':'click_time','agg':'count','addition':'max'}
+        # {'groupby': ['ip','day','device'], 'select': 'click_time', 'agg': 'count'},
+        # {'groupby': ['ip','day','device'], 'select': 'click_time', 'agg': 'nunique'},
+        # {'groupby': ['ip','day','device'], 'select': 'app', 'agg': 'count'},
+        # {'groupby': ['ip','day','device'], 'select': 'app', 'agg': 'nunique'},
+        # {'groupby': ['ip','day','device'], 'select': 'os', 'agg': 'nunique'},
+        # {'groupby': ['ip','day','device'], 'select': 'channel', 'agg': 'nunique'},
+        # {'groupby': ['ip','day','hour','minute','second'], 'select': 'app', 'agg': 'nunique'},
+        # {'groupby': ['ip','day','hour','minute','second'], 'select': 'app', 'agg': 'count'},
+        # {'groupby': ['ip','day','hour','minute','second'], 'select': 'click_time', 'agg': 'count'},
+        # {'groupby': ['ip','day','hour','minute','second'], 'select': 'os', 'agg': 'count'},
+        # {'groupby': ['ip','day','hour'],'select':'click_time','agg':'count','addition':'max'}
     ]
 
 
@@ -148,10 +148,10 @@ def feat_ratio(df):
     print(df.columns)
     df['ip_day_hour_minuteR'] = df['ip_day_hour_count_minute']/df['ip_day_hour_nunique_minute']
     df['ip_day_hour_minute_secondR'] = df['ip_day_hour_minute_count_second']/df['ip_day_hour_minute_nunique_second']
-    df['ip_day_device_click_timeR'] = df['ip_day_device_count_click_time']/df['ip_day_device_nunique_click_time']
-    df['ip_day_device_appR'] = df['ip_day_device_count_app']/df['ip_day_device_nunique_app']
-    df['ip_day_device_appChannelR'] = df['ip_day_device_nunique_app']/df['ip_day_device_nunique_channel']
-    df['ip_day_hour_minute_second_appR'] = df['ip_day_hour_minute_second_nunique_app']/df['ip_day_hour_minute_second_count_app']
+    # df['ip_day_device_click_timeR'] = df['ip_day_device_count_click_time']/df['ip_day_device_nunique_click_time']
+    # df['ip_day_device_appR'] = df['ip_day_device_count_app']/df['ip_day_device_nunique_app']
+    # df['ip_day_device_appChannelR'] = df['ip_day_device_nunique_app']/df['ip_day_device_nunique_channel']
+    # df['ip_day_hour_minute_second_appR'] = df['ip_day_hour_minute_second_nunique_app']/df['ip_day_hour_minute_second_count_app']
     return df
 
 def do_attributed_prob(train_df, features):
@@ -171,7 +171,7 @@ def do_attributed_prob(train_df, features):
                 on=features, how='left'
             )
 
-debug=0 
+debug=1 
 if debug:
     print('*** debug parameter set: this is a test run for debugging purposes ***')
 
@@ -351,20 +351,12 @@ def DO(frm,to,fileno):
     #               'X0', 'X1', 'X2', 'X3', 'X4', 'X5', 'X6', 'X7', 'X8',
     #               'ip_attributed_rate', 'app_attributed_rate', 'device_attributed_rate', 
     #               'os_attributed_rate', 'channel_attributed_rate', 'ip_nextClick_var'])
-    predictors.extend(['app', 'channel', 'click_id', 'device', 'ip',
-       'is_attributed', 'os', 'hour', 'minute', 'second',
-       'ip_day_hour_nunique_minute', 'ip_day_hour_count_minute',
-       'ip_day_hour_minute_nunique_second', 'ip_day_hour_minute_count_second',
-       'ip_day_device_count_click_time', 'ip_day_device_nunique_click_time',
-       'ip_day_device_count_app', 'ip_day_device_nunique_app',
-       'ip_day_device_nunique_os', 'ip_day_device_nunique_channel',
-       'ip_day_hour_minute_second_nunique_app',
-       'ip_day_hour_minute_second_count_app',
-       'ip_day_hour_minute_second_count_click_time',
-       'ip_day_hour_minute_second_count_os', 'ip_day_hour_count_click_time',
-       'ip_day_hour_minuteR', 'ip_day_hour_minute_secondR',
-       'ip_day_device_click_timeR', 'ip_day_device_appR',
-       'ip_day_device_appChannelR', 'ip_day_hour_minute_second_appR'])
+    predictors.extend(['app', 'channel', 'click_id', 'device', 'ip', 'is_attributed', 'os',
+       'hour', 'minute', 'second', 'ip_day_hour_nunique_minute',
+       'ip_day_hour_count_minute', 'ip_day_hour_minute_nunique_second',
+       'ip_day_hour_minute_count_second', 'ip_day_hour_minuteR',
+       'ip_day_hour_minute_secondR', 'nextClick', 'nextClick_shift',
+       'ip_nextClick_var'])
     categorical = ['app', 'device', 'os', 'channel', 'hour']
     print('predictors',predictors)
 
