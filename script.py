@@ -148,10 +148,10 @@ def feat_ratio(df):
     print(df.columns)
     df['ip_day_hour_minuteR'] = df['ip_day_hour_count_minute']/df['ip_day_hour_nunique_minute']
     df['ip_day_hour_minute_secondR'] = df['ip_day_hour_minute_count_second']/df['ip_day_hour_minute_nunique_second']
-    # df['ip_day_device_click_timeR'] = df['ip_day_device_count_click_time']/df['ip_day_device_nunique_click_time']
-    # df['ip_day_device_appR'] = df['ip_day_device_count_app']/df['ip_day_device_nunique_app']
-    # df['ip_day_device_appChannelR'] = df['ip_day_device_nunique_app']/df['ip_day_device_nunique_channel']
-    # df['ip_day_hour_minute_second_appR'] = df['ip_day_hour_minute_second_nunique_app']/df['ip_day_hour_minute_second_count_app']
+    df['ip_day_device_click_timeR'] = df['ip_day_device_count_click_time']/df['ip_day_device_nunique_click_time']
+    df['ip_day_device_appR'] = df['ip_day_device_count_app']/df['ip_day_device_nunique_app']
+    df['ip_day_device_appChannelR'] = df['ip_day_device_nunique_app']/df['ip_day_device_nunique_channel']
+    df['ip_day_hour_minute_second_appR'] = df['ip_day_hour_minute_second_nunique_app']/df['ip_day_hour_minute_second_count_app']
     return df
 
 def do_attributed_prob(train_df, features):
@@ -360,7 +360,7 @@ def DO(frm,to,fileno):
        'ip_day_hour_minute_second_count_app',
        'ip_day_hour_minute_second_count_click_time',
        'ip_day_hour_minute_second_count_os', 'ip_day_hour_count_click_time',
-       'ip_day_hour_minuteR', 'ip_day_hour_minute_secondR'
+       'ip_day_hour_minuteR', 'ip_day_hour_minute_secondR','ip_day_device_click_timeR','ip_day_device_appR','ip_day_device_appChannelR','ip_day_hour_minute_second_appR'
        ])
     categorical = ['app', 'device', 'os', 'channel', 'hour']
     print('predictors',predictors)
