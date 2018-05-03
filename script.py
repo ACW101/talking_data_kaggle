@@ -51,7 +51,7 @@ def do_countuniq( df, group_cols, counted, agg_name, agg_type='uint32', show_max
     df[agg_name] = df[agg_name].astype(agg_type)
     gc.collect()
     return( df )
-    
+
 def do_cumcount( df, group_cols, counted, agg_name, agg_type='uint32', show_max=False, show_agg=True ):
     if show_agg:
         print( "Cumulative count by ", group_cols , '...' )
@@ -218,7 +218,6 @@ def DO(frm,to,fileno):
     train_df = do_attributed_prob( train_df, ['os']); gc.collect()
     train_df = do_attributed_prob( train_df, ['channel']); gc.collect()
 
-    print(train_df.columns)
 
 
     print('doing nextClick')
@@ -249,7 +248,6 @@ def DO(frm,to,fileno):
             print('saving')
             pd.DataFrame(QQ).to_csv(filename,index=False)
             
-    train_df.drop(['click_time'], axis=1, inplace=True)
 
     train_df[new_feature] = pd.Series(QQ).astype('float32')
     predictors.append(new_feature)
@@ -257,8 +255,12 @@ def DO(frm,to,fileno):
     train_df[new_feature+'_shift'] = train_df[new_feature].shift(+1).values
     predictors.append(new_feature+'_shift')
     
+    train_df.drop(['click_time', 'day'], axis=1, inplace=True)
+
     del QQ
     gc.collect()
+
+    train_df = do_var( train_df, ['ip'], 'nextClick', 'ip_nextClick_var', show_max=True ); gc.collect()
 
     print("vars and data type: ")
     train_df.info()
@@ -266,13 +268,19 @@ def DO(frm,to,fileno):
     train_df['ip_app_count'] = train_df['ip_app_count'].astype('uint16')
     train_df['ip_app_os_count'] = train_df['ip_app_os_count'].astype('uint16')
 
+    print(train_df.columns)
+    print(train_df['ip_nextClick_var'].head)
+
+
     target = 'is_attributed'
-    predictors.extend(['app','device','os', 'channel', 'hour', 'day', 
+    predictors.extend(['app','device','os', 'channel', 'hour', 
                   'ip_tcount', 'ip_tchan_count', 'ip_app_count',
                   'ip_app_os_count', 'ip_app_os_var',
                   'ip_app_channel_var_day','ip_app_channel_mean_hour',
-                  'X0', 'X1', 'X2', 'X3', 'X4', 'X5', 'X6', 'X7', 'X8'])
-    categorical = ['app', 'device', 'os', 'channel', 'hour', 'day']
+                  'X0', 'X1', 'X2', 'X3', 'X4', 'X5', 'X6', 'X7', 'X8',
+                  'ip_attributed_rate', 'app_attributed_rate', 'device_attributed_rate', 
+                  'os_attributed_rate', 'channel_attributed_rate', 'ip_nextClick_var'])
+    categorical = ['app', 'device', 'os', 'channel', 'hour']
     print('predictors',predictors)
 
     test_df = train_df[len_train:]
