@@ -31,20 +31,21 @@ import os
 def featurize(X_train):
 
     GROUPBY_AGGREGATIONS = [
-        {'groupby': ['ip','day'], 'select': 'minute', 'agg': 'nunique'},
-        {'groupby': ['ip','day'], 'select': 'minute', 'agg': 'count'},
-        {'groupby': ['ip','day'], 'select': 'second', 'agg': 'nunique'},
-        {'groupby': ['ip','day'], 'select': 'second', 'agg': 'count'},
+        {'groupby': ['ip','day','hour'], 'select': 'minute', 'agg': 'nunique'},
+        {'groupby': ['ip','day','hour'], 'select': 'minute', 'agg': 'count'},
+        {'groupby': ['ip','day','hour','minute'], 'select': 'second', 'agg': 'nunique'},
+        {'groupby': ['ip','day','hour','minute'], 'select': 'second', 'agg': 'count'},
         {'groupby': ['ip','day','device'], 'select': 'click_time', 'agg': 'count'},
         {'groupby': ['ip','day','device'], 'select': 'click_time', 'agg': 'nunique'},
         {'groupby': ['ip','day','device'], 'select': 'app', 'agg': 'count'},
         {'groupby': ['ip','day','device'], 'select': 'app', 'agg': 'nunique'},
         {'groupby': ['ip','day','device'], 'select': 'os', 'agg': 'nunique'},
         {'groupby': ['ip','day','device'], 'select': 'channel', 'agg': 'nunique'},
-        {'groupby': ['ip','day','minute','second'], 'select': 'app', 'agg': 'nunique'},
-        {'groupby': ['ip','day','minute','second'], 'select': 'app', 'agg': 'count'},
-        {'groupby': ['ip','day','minute','second'], 'select': 'click_time', 'agg': 'count'},
-        {'groupby': ['ip','day','minute','second'], 'select': 'os', 'agg': 'count'}
+        {'groupby': ['ip','day','hour','minute','second'], 'select': 'app', 'agg': 'nunique'},
+        {'groupby': ['ip','day','hour','minute','second'], 'select': 'app', 'agg': 'count'},
+        {'groupby': ['ip','day','hour','minute','second'], 'select': 'click_time', 'agg': 'count'},
+        {'groupby': ['ip','day','hour','minute','second'], 'select': 'os', 'agg': 'count'}
+        {'groupby': ['ip','day','hour'],'select':'click_time','agg':'count'}
     ]
 
 
