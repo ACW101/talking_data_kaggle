@@ -44,8 +44,8 @@ def featurize(X_train):
         {'groupby': ['ip','day','hour','minute','second'], 'select': 'app', 'agg': 'nunique'},
         {'groupby': ['ip','day','hour','minute','second'], 'select': 'app', 'agg': 'count'},
         {'groupby': ['ip','day','hour','minute','second'], 'select': 'click_time', 'agg': 'count'},
-        {'groupby': ['ip','day','hour','minute','second'], 'select': 'os', 'agg': 'count'}
-        {'groupby': ['ip','day','hour'],'select':'click_time','agg':'count'}
+        {'groupby': ['ip','day','hour','minute','second'], 'select': 'os', 'agg': 'count'},
+        {'groupby': ['ip','day','hour'],'select':'click_time','agg':'count','addition':'max'}
     ]
 
 
@@ -72,6 +72,7 @@ def featurize(X_train):
             reset_index(). \
             rename(index=str, columns={spec['select']: new_feature})
         
+        
         # Merge back to X_total
         if 'cumcount' == spec['agg']:
             X_train[new_feature] = gp[0].values
@@ -81,6 +82,7 @@ def featurize(X_train):
          # Clear memory
         del gp
         gc.collect()
+    return X_train
 	
 def do_count( df, group_cols, agg_name, agg_type='uint32', show_max=False, show_agg=True ):
     if show_agg:
@@ -143,13 +145,14 @@ def do_var( df, group_cols, counted, agg_name, agg_type='float32', show_max=Fals
     return( df )
 
 def feat_ratio(df):
-    df['ip_day_minuteR'] = df['ip_day_count_minute']/df['ip_day_nunique_minute']
-    df['ip_day_secondR'] = df['ip_day_count_second']/df['ip_day_nunique_second']
+    print(df.columns)
+    df['ip_day_hour_minuteR'] = df['ip_day_hour_count_minute']/df['ip_day_hour_nunique_minute']
+    df['ip_day_hour_minute_secondR'] = df['ip_day_hour_minute_count_second']/df['ip_day_hour_minute_nunique_second']
     df['ip_day_device_click_timeR'] = df['ip_day_device_count_click_time']/df['ip_day_device_nunique_click_time']
     df['ip_day_device_appR'] = df['ip_day_device_count_app']/df['ip_day_device_nunique_app']
     df['ip_day_device_appChannelR'] = df['ip_day_device_nunique_app']/df['ip_day_device_nunique_channel']
-    df['ip_day_minute_second_appR'] = df['ip_day_minute_second_nunique_app']/df['ip_day_minute_second_count_app']
-    
+    df['ip_day_hour_minute_second_appR'] = df['ip_day_hour_minute_second_nunique_app']/df['ip_day_hour_minute_second_count_app']
+    return df
 
 def do_attributed_prob(train_df, features):
     grouped = train_df.groupby(features)
@@ -168,7 +171,7 @@ def do_attributed_prob(train_df, features):
                 on=features, how='left'
             )
 
-debug=1 
+debug=0 
 if debug:
     print('*** debug parameter set: this is a test run for debugging purposes ***')
 
@@ -257,30 +260,36 @@ def DO(frm,to,fileno):
     print('Extracting new features...')
     train_df['hour'] = pd.to_datetime(train_df.click_time).dt.hour.astype('uint8')
     train_df['day'] = pd.to_datetime(train_df.click_time).dt.day.astype('uint8')
+    train_df['minute'] = pd.to_datetime(train_df.click_time).dt.day.astype('uint8')
+    train_df['second'] = pd.to_datetime(train_df.click_time).dt.day.astype('uint8')
     
-    gc.collect()
-    train_df = do_countuniq( train_df, ['ip'], 'channel', 'X0', 'uint8', show_max=True ); gc.collect()
-    train_df = do_cumcount( train_df, ['ip', 'device', 'os'], 'app', 'X1', show_max=True ); gc.collect()
-    train_df = do_countuniq( train_df, ['ip', 'day'], 'hour', 'X2', 'uint8', show_max=True ); gc.collect()
-    train_df = do_countuniq( train_df, ['ip'], 'app', 'X3', 'uint8', show_max=True ); gc.collect()
-    train_df = do_countuniq( train_df, ['ip', 'app'], 'os', 'X4', 'uint8', show_max=True ); gc.collect()
-    train_df = do_countuniq( train_df, ['ip'], 'device', 'X5', 'uint16', show_max=True ); gc.collect()
-    train_df = do_countuniq( train_df, ['app'], 'channel', 'X6', show_max=True ); gc.collect()
-    train_df = do_cumcount( train_df, ['ip'], 'os', 'X7', show_max=True ); gc.collect()
-    train_df = do_countuniq( train_df, ['ip', 'device', 'os'], 'app', 'X8', show_max=True ); gc.collect()
-    train_df = do_count( train_df, ['ip', 'day', 'hour'], 'ip_tcount', show_max=True ); gc.collect()
-    train_df = do_count( train_df, ['ip', 'app'], 'ip_app_count', show_max=True ); gc.collect()
-    train_df = do_count( train_df, ['ip', 'app', 'os'], 'ip_app_os_count', 'uint16', show_max=True ); gc.collect()
-    train_df = do_var( train_df, ['ip', 'day', 'channel'], 'hour', 'ip_tchan_count', show_max=True ); gc.collect()
-    train_df = do_var( train_df, ['ip', 'app', 'os'], 'hour', 'ip_app_os_var', show_max=True ); gc.collect()
-    train_df = do_var( train_df, ['ip', 'app', 'channel'], 'day', 'ip_app_channel_var_day', show_max=True ); gc.collect()
-    train_df = do_mean( train_df, ['ip', 'app', 'channel'], 'hour', 'ip_app_channel_mean_hour', show_max=True ); gc.collect()
-    train_df = do_attributed_prob( train_df, ['ip']); gc.collect()
-    train_df = do_attributed_prob( train_df, ['app']); gc.collect()
-    train_df = do_attributed_prob( train_df, ['device']); gc.collect()
-    train_df = do_attributed_prob( train_df, ['os']); gc.collect()
-    train_df = do_attributed_prob( train_df, ['channel']); gc.collect()
+    # gc.collect()
+    # train_df = do_countuniq( train_df, ['ip'], 'channel', 'X0', 'uint8', show_max=True ); gc.collect()
+    # train_df = do_cumcount( train_df, ['ip', 'device', 'os'], 'app', 'X1', show_max=True ); gc.collect()
+    # train_df = do_countuniq( train_df, ['ip', 'day'], 'hour', 'X2', 'uint8', show_max=True ); gc.collect()
+    # train_df = do_countuniq( train_df, ['ip'], 'app', 'X3', 'uint8', show_max=True ); gc.collect()
+    # train_df = do_countuniq( train_df, ['ip', 'app'], 'os', 'X4', 'uint8', show_max=True ); gc.collect()
+    # train_df = do_countuniq( train_df, ['ip'], 'device', 'X5', 'uint16', show_max=True ); gc.collect()
+    # train_df = do_countuniq( train_df, ['app'], 'channel', 'X6', show_max=True ); gc.collect()
+    # train_df = do_cumcount( train_df, ['ip'], 'os', 'X7', show_max=True ); gc.collect()
+    # train_df = do_countuniq( train_df, ['ip', 'device', 'os'], 'app', 'X8', show_max=True ); gc.collect()
+    # train_df = do_count( train_df, ['ip', 'day', 'hour'], 'ip_tcount', show_max=True ); gc.collect()
+    # train_df = do_count( train_df, ['ip', 'app'], 'ip_app_count', show_max=True ); gc.collect()
+    # train_df = do_count( train_df, ['ip', 'app', 'os'], 'ip_app_os_count', 'uint16', show_max=True ); gc.collect()
+    # train_df = do_var( train_df, ['ip', 'day', 'channel'], 'hour', 'ip_tchan_count', show_max=True ); gc.collect()
+    # train_df = do_var( train_df, ['ip', 'app', 'os'], 'hour', 'ip_app_os_var', show_max=True ); gc.collect()
+    # train_df = do_var( train_df, ['ip', 'app', 'channel'], 'day', 'ip_app_channel_var_day', show_max=True ); gc.collect()
+    # train_df = do_mean( train_df, ['ip', 'app', 'channel'], 'hour', 'ip_app_channel_mean_hour', show_max=True ); gc.collect()
+    # train_df = do_attributed_prob( train_df, ['ip']); gc.collect()
+    # train_df = do_attributed_prob( train_df, ['app']); gc.collect()
+    # train_df = do_attributed_prob( train_df, ['device']); gc.collect()
+    # train_df = do_attributed_prob( train_df, ['os']); gc.collect()
+    # train_df = do_attributed_prob( train_df, ['channel']); gc.collect()
 
+    train_df = featurize(train_df)
+    train_df = feat_ratio(train_df)
+
+    print(train_df.columns)
 
     print('doing nextClick')
     predictors=[]
@@ -326,22 +335,36 @@ def DO(frm,to,fileno):
 
     print("vars and data type: ")
     train_df.info()
-    train_df['ip_tcount'] = train_df['ip_tcount'].astype('uint16')
-    train_df['ip_app_count'] = train_df['ip_app_count'].astype('uint16')
-    train_df['ip_app_os_count'] = train_df['ip_app_os_count'].astype('uint16')
+    # train_df['ip_tcount'] = train_df['ip_tcount'].astype('uint16')
+    # train_df['ip_app_count'] = train_df['ip_app_count'].astype('uint16')
+    # train_df['ip_app_os_count'] = train_df['ip_app_os_count'].astype('uint16')
 
     print(train_df.columns)
     print(train_df['ip_nextClick_var'].head)
 
 
     target = 'is_attributed'
-    predictors.extend(['app','device','os', 'channel', 'hour', 
-                  'ip_tcount', 'ip_tchan_count', 'ip_app_count',
-                  'ip_app_os_count', 'ip_app_os_var',
-                  'ip_app_channel_var_day','ip_app_channel_mean_hour',
-                  'X0', 'X1', 'X2', 'X3', 'X4', 'X5', 'X6', 'X7', 'X8',
-                  'ip_attributed_rate', 'app_attributed_rate', 'device_attributed_rate', 
-                  'os_attributed_rate', 'channel_attributed_rate', 'ip_nextClick_var'])
+    # predictors.extend(['app','device','os', 'channel', 'hour', 
+    #               'ip_tcount', 'ip_tchan_count', 'ip_app_count',
+    #               'ip_app_os_count', 'ip_app_os_var',
+    #               'ip_app_channel_var_day','ip_app_channel_mean_hour',
+    #               'X0', 'X1', 'X2', 'X3', 'X4', 'X5', 'X6', 'X7', 'X8',
+    #               'ip_attributed_rate', 'app_attributed_rate', 'device_attributed_rate', 
+    #               'os_attributed_rate', 'channel_attributed_rate', 'ip_nextClick_var'])
+    predictors.extend(['app', 'channel', 'click_id', 'device', 'ip',
+       'is_attributed', 'os', 'hour', 'minute', 'second',
+       'ip_day_hour_nunique_minute', 'ip_day_hour_count_minute',
+       'ip_day_hour_minute_nunique_second', 'ip_day_hour_minute_count_second',
+       'ip_day_device_count_click_time', 'ip_day_device_nunique_click_time',
+       'ip_day_device_count_app', 'ip_day_device_nunique_app',
+       'ip_day_device_nunique_os', 'ip_day_device_nunique_channel',
+       'ip_day_hour_minute_second_nunique_app',
+       'ip_day_hour_minute_second_count_app',
+       'ip_day_hour_minute_second_count_click_time',
+       'ip_day_hour_minute_second_count_os', 'ip_day_hour_count_click_time',
+       'ip_day_hour_minuteR', 'ip_day_hour_minute_secondR',
+       'ip_day_device_click_timeR', 'ip_day_device_appR',
+       'ip_day_device_appChannelR', 'ip_day_hour_minute_second_appR'])
     categorical = ['app', 'device', 'os', 'channel', 'hour']
     print('predictors',predictors)
 
