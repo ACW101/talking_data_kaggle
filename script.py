@@ -78,54 +78,6 @@ def feat_ratio(df):
     gc.collect()
     return df
 	
-def do_count( df, group_cols, agg_name, agg_type='uint32', show_max=False, show_agg=True ):
-    if show_agg:
-        print( "Aggregating by ", group_cols , '...' )
-    gp = df[group_cols][group_cols].groupby(group_cols).size().rename(agg_name).to_frame().reset_index()
-    df = df.merge(gp, on=group_cols, how='left')
-    del gp
-    if show_max:
-        print( agg_name + " max value = ", df[agg_name].max() )
-    df[agg_name] = df[agg_name].astype(agg_type)
-    gc.collect()
-    return( df )
-
-def do_countuniq( df, group_cols, counted, agg_name, agg_type='uint32', show_max=False, show_agg=True ):
-    if show_agg:
-        print( "Counting unqiue ", counted, " by ", group_cols , '...' )
-    gp = df[group_cols+[counted]].groupby(group_cols)[counted].nunique().reset_index().rename(columns={counted:agg_name})
-    df = df.merge(gp, on=group_cols, how='left')
-    del gp
-    if show_max:
-        print( agg_name + " max value = ", df[agg_name].max() )
-    df[agg_name] = df[agg_name].astype(agg_type)
-    gc.collect()
-    return( df )
-
-def do_cumcount( df, group_cols, counted, agg_name, agg_type='uint32', show_max=False, show_agg=True ):
-    if show_agg:
-        print( "Cumulative count by ", group_cols , '...' )
-    gp = df[group_cols+[counted]].groupby(group_cols)[counted].cumcount()
-    df[agg_name]=gp.values
-    del gp
-    if show_max:
-        print( agg_name + " max value = ", df[agg_name].max() )
-    df[agg_name] = df[agg_name].astype(agg_type)
-    gc.collect()
-    return( df )
-
-def do_mean( df, group_cols, counted, agg_name, agg_type='float32', show_max=False, show_agg=True ):
-    if show_agg:
-        print( "Calculating mean of ", counted, " by ", group_cols , '...' )
-    gp = df[group_cols+[counted]].groupby(group_cols)[counted].mean().reset_index().rename(columns={counted:agg_name})
-    df = df.merge(gp, on=group_cols, how='left')
-    del gp
-    if show_max:
-        print( agg_name + " max value = ", df[agg_name].max() )
-    df[agg_name] = df[agg_name].astype(agg_type)
-    gc.collect()
-    return( df )
-
 def do_var( df, group_cols, counted, agg_name, agg_type='float32', show_max=False, show_agg=True ):
     if show_agg:
         print( "Calculating variance of ", counted, " by ", group_cols , '...' )
@@ -137,7 +89,6 @@ def do_var( df, group_cols, counted, agg_name, agg_type='float32', show_max=Fals
     df[agg_name] = df[agg_name].astype(agg_type)
     gc.collect()
     return( df )
-
 
 def do_attributed_prob(train_df, features):
     grouped = train_df.groupby(features)
@@ -156,7 +107,7 @@ def do_attributed_prob(train_df, features):
                 on=features, how='left'
             )
 
-debug=1 
+debug=0 
 if debug:
     print('*** debug parameter set: this is a test run for debugging purposes ***')
 
@@ -249,22 +200,6 @@ def DO(frm,to,fileno):
     train_df['second'] = pd.to_datetime(train_df.click_time).dt.day.astype('uint8')
     
     gc.collect()
-    # train_df = do_countuniq( train_df, ['ip'], 'channel', 'X0', 'uint8', show_max=True ); gc.collect()
-    # train_df = do_cumcount( train_df, ['ip', 'device', 'os'], 'app', 'X1', show_max=True ); gc.collect()
-    # train_df = do_countuniq( train_df, ['ip', 'day'], 'hour', 'X2', 'uint8', show_max=True ); gc.collect()
-    # train_df = do_countuniq( train_df, ['ip'], 'app', 'X3', 'uint8', show_max=True ); gc.collect()
-    # train_df = do_countuniq( train_df, ['ip', 'app'], 'os', 'X4', 'uint8', show_max=True ); gc.collect()
-    # train_df = do_countuniq( train_df, ['ip'], 'device', 'X5', 'uint16', show_max=True ); gc.collect()
-    # train_df = do_countuniq( train_df, ['app'], 'channel', 'X6', show_max=True ); gc.collect()
-    # train_df = do_cumcount( train_df, ['ip'], 'os', 'X7', show_max=True ); gc.collect()
-    # train_df = do_countuniq( train_df, ['ip', 'device', 'os'], 'app', 'X8', show_max=True ); gc.collect()
-    # train_df = do_count( train_df, ['ip', 'day', 'hour'], 'ip_tcount', show_max=True ); gc.collect()
-    # train_df = do_count( train_df, ['ip', 'app'], 'ip_app_count', show_max=True ); gc.collect()
-    # train_df = do_count( train_df, ['ip', 'app', 'os'], 'ip_app_os_count', 'uint16', show_max=True ); gc.collect()
-    # train_df = do_var( train_df, ['ip', 'day', 'channel'], 'hour', 'ip_tchan_count', show_max=True ); gc.collect()
-    # train_df = do_var( train_df, ['ip', 'app', 'os'], 'hour', 'ip_app_os_var', show_max=True ); gc.collect()
-    # train_df = do_var( train_df, ['ip', 'app', 'channel'], 'day', 'ip_app_channel_var_day', show_max=True ); gc.collect()
-    # train_df = do_mean( train_df, ['ip', 'app', 'channel'], 'hour', 'ip_app_channel_mean_hour', show_max=True ); gc.collect()
     # train_df = do_attributed_prob( train_df, ['ip']); gc.collect()
     # train_df = do_attributed_prob( train_df, ['app']); gc.collect()
     # train_df = do_attributed_prob( train_df, ['device']); gc.collect()
@@ -291,7 +226,7 @@ def DO(frm,to,fileno):
         new_features = set(train_df.columns) - original_features
         print("new feawtures:")
         print(new_features)
-        if True:
+        if not debug:
             print('saving grouped features')
             train_df[list(new_features)].to_csv(filename, header=True, index=False)
 
@@ -329,6 +264,8 @@ def DO(frm,to,fileno):
 
     train_df[new_feature] = pd.Series(QQ).astype('float32')
     predictors.append(new_feature)
+    train_df = do_var( train_df, ['ip'], new_feature, 'ip_var_nextClick', show_max=True ); gc.collect()
+    predictors.append( "ip_var_nextClick")
 
     train_df[new_feature+'_shift'] = train_df[new_feature].shift(+1).values
     predictors.append(new_feature+'_shift')
@@ -380,7 +317,7 @@ def DO(frm,to,fileno):
                             target, 
                             objective='binary', 
                             metrics='auc',
-                            early_stopping_rounds=30, 
+                            early_stopping_rounds=20, 
                             verbose_eval=True, 
                             num_boost_round=1000, 
                             categorical_features=categorical)
@@ -392,10 +329,10 @@ def DO(frm,to,fileno):
 
     print("Predicting...")
     sub['is_attributed'] = bst.predict(test_df[predictors],num_iteration=best_iteration)
+    import datetime
     if not debug:
-        print("writing...")
-        sub.to_csv('sub_it%d.csv'%(fileno),index=False,float_format='%.9f')
-    print("done...")
+        print("writing to 'sub_'" + (datetime.datetime.now().strftime("%Y-%m-%d_%H:%M")))
+        sub.to_csv('sub_' + (datetime.datetime.now().strftime("%Y-%m-%d_%H:%M")))
     return sub
 
 
