@@ -278,10 +278,10 @@ def DO(frm,to,fileno):
     # train_df = do_count( train_df, ['ip', 'day', 'hour'], 'ip_tcount', show_max=True ); gc.collect()
     # train_df = do_count( train_df, ['ip', 'app'], 'ip_app_count', show_max=True ); gc.collect()
     # train_df = do_count( train_df, ['ip', 'app', 'os'], 'ip_app_os_count', 'uint16', show_max=True ); gc.collect()
-    # train_df = do_var( train_df, ['ip', 'day', 'channel'], 'hour', 'ip_tchan_count', show_max=True ); gc.collect()
-    # train_df = do_var( train_df, ['ip', 'app', 'os'], 'hour', 'ip_app_os_var', show_max=True ); gc.collect()
-    # train_df = do_var( train_df, ['ip', 'app', 'channel'], 'day', 'ip_app_channel_var_day', show_max=True ); gc.collect()
-    # train_df = do_mean( train_df, ['ip', 'app', 'channel'], 'hour', 'ip_app_channel_mean_hour', show_max=True ); gc.collect()
+    train_df = do_var( train_df, ['ip', 'day', 'channel'], 'hour', 'ip_tchan_count', show_max=True ); gc.collect()
+    train_df = do_var( train_df, ['ip', 'app', 'os'], 'hour', 'ip_app_os_var', show_max=True ); gc.collect()
+    train_df = do_var( train_df, ['ip', 'app', 'channel'], 'day', 'ip_app_channel_var_day', show_max=True ); gc.collect()
+    train_df = do_mean( train_df, ['ip', 'app', 'channel'], 'hour', 'ip_app_channel_mean_hour', show_max=True ); gc.collect()
     # train_df = do_attributed_prob( train_df, ['ip']); gc.collect()
     # train_df = do_attributed_prob( train_df, ['app']); gc.collect()
     # train_df = do_attributed_prob( train_df, ['device']); gc.collect()
@@ -362,7 +362,7 @@ def DO(frm,to,fileno):
        'ip_day_hour_minute_second_count_app',
        'ip_day_hour_minute_second_count_click_time',
        'ip_day_hour_minute_second_count_os', 'ip_day_hour_count_click_time',
-       'ip_day_hour_minuteR', 'ip_day_hour_minute_secondR','ip_day_device_click_timeR','ip_day_device_appR','ip_day_device_appChannelR','ip_day_hour_minute_second_appR','max_hour_click_count'
+       'ip_day_hour_minuteR', 'ip_day_hour_minute_secondR','ip_day_device_click_timeR','ip_day_device_appR','ip_day_device_appChannelR','ip_day_hour_minute_second_appR','max_hour_click_count','ip_tchan_count','ip_app_os_var','ip_app_channel_var_day','ip_app_channel_mean_hour'
        ])
     categorical = ['app', 'device', 'os', 'channel', 'hour']
     print('predictors',predictors)
