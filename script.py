@@ -66,18 +66,6 @@ def featurize(X_train):
         gc.collect()
     return X_train
 
-def feat_ratio(df):
-    print(df.columns)
-    df['ip_day_hour_minuteR'] = df['ip_day_hour_count_minute']/df['ip_day_hour_nunique_minute']
-    df['ip_day_hour_minute_secondR'] = df['ip_day_hour_minute_count_second']/df['ip_day_hour_minute_nunique_second']
-    df['ip_day_device_click_timeR'] = df['ip_day_device_count_click_time']/df['ip_day_device_nunique_click_time']
-    df['ip_day_device_appR'] = df['ip_day_device_count_app']/df['ip_day_device_nunique_app']
-    df['ip_day_device_appChannelR'] = df['ip_day_device_nunique_app']/df['ip_day_device_nunique_channel']
-    df['ip_day_hour_minute_second_appR'] = df['ip_day_hour_minute_second_nunique_app']/df['ip_day_hour_minute_second_count_app']
-    df['max_hour_click_count']= df.groupby(['ip','day','hour'])['ip_day_hour_count_click_time'].transform(max)
-    gc.collect()
-    return df
-	
 def do_var( df, group_cols, counted, agg_name, agg_type='float32', show_max=False, show_agg=True ):
     if show_agg:
         print( "Calculating variance of ", counted, " by ", group_cols , '...' )
@@ -89,6 +77,18 @@ def do_var( df, group_cols, counted, agg_name, agg_type='float32', show_max=Fals
     df[agg_name] = df[agg_name].astype(agg_type)
     gc.collect()
     return( df )
+
+def feat_ratio(df):
+    print(df.columns)
+    df['ip_day_hour_minuteR'] = df['ip_day_hour_count_minute']/df['ip_day_hour_nunique_minute']
+    df['ip_day_hour_minute_secondR'] = df['ip_day_hour_minute_count_second']/df['ip_day_hour_minute_nunique_second']
+    df['ip_day_device_click_timeR'] = df['ip_day_device_count_click_time']/df['ip_day_device_nunique_click_time']
+    df['ip_day_device_appR'] = df['ip_day_device_count_app']/df['ip_day_device_nunique_app']
+    df['ip_day_device_appChannelR'] = df['ip_day_device_nunique_app']/df['ip_day_device_nunique_channel']
+    df['ip_day_hour_minute_second_appR'] = df['ip_day_hour_minute_second_nunique_app']/df['ip_day_hour_minute_second_count_app']
+    df['max_hour_click_count']= df.groupby(['ip','day','hour'])['ip_day_hour_count_click_time'].transform(max)
+    gc.collect()
+    return df
 
 def do_attributed_prob(train_df, features):
     grouped = train_df.groupby(features)
@@ -114,7 +114,10 @@ if debug:
 def lgb_modelfit_nocv(params, dtrain, dvalid, predictors, target='target', objective='binary', metrics='auc',
                  feval=None, early_stopping_rounds=20, num_boost_round=3000, verbose_eval=10, categorical_features=None):
     lgb_params = {
-        'boosting_type': 'gbdt',
+        #'boosting_type': 'gbdt',
+	'boosting_type':'dart',
+	'xgboost_dart_mode':True,
+	########
         'objective': objective,
         'metric':metrics,
         'learning_rate': 0.2,
@@ -332,7 +335,7 @@ def DO(frm,to,fileno):
     import datetime
     if not debug:
         print("writing to 'sub_'" + (datetime.datetime.now().strftime("%Y-%m-%d_%H:%M")))
-        sub.to_csv('sub_' + (datetime.datetime.now().strftime("%Y-%m-%d_%H:%M")))
+        sub.to_csv('sub_' + (datetime.datetime.now().strftime("%Y-%m-%d_%H:%M")), index=False)
     return sub
 
 
