@@ -362,7 +362,7 @@ def DO(frm,to,fileno):
        'ip_day_hour_minute_second_count_app',
        'ip_day_hour_minute_second_count_click_time',
        'ip_day_hour_minute_second_count_os', 'ip_day_hour_count_click_time',
-       'ip_day_hour_minuteR', 'ip_day_hour_minute_secondR','ip_day_device_click_timeR','ip_day_device_appR','ip_day_device_appChannelR','ip_day_hour_minute_second_appR'
+       'ip_day_hour_minuteR', 'ip_day_hour_minute_secondR','ip_day_device_click_timeR','ip_day_device_appR','ip_day_device_appChannelR','ip_day_hour_minute_second_appR','max_hour_click_count'
        ])
     categorical = ['app', 'device', 'os', 'channel', 'hour']
     print('predictors',predictors)
