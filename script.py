@@ -1,23 +1,6 @@
 """
 A non-blending lightGBM model that incorporates portions and ideas from various public kernels.
 """
-WHERE = 'aws'
-
-if WHERE=='kaggle':
-	inpath = '../input/'
-	suffix = ''
-	outpath = ''
-	savepath = ''
-elif WHERE=='gcloud':
-	inpath = '../.kaggle/competitions/talkingdata-adtracking-fraud-detection/'
-	suffix = '.zip'
-	outpath = '../sub/'
-	savepath = '../data/'
-else:
-	inpath = './'
-	suffix = ''
-	outpath = './'
-	savepath = './data/'
 
 import pandas as pd
 import time
@@ -29,7 +12,6 @@ import matplotlib.pyplot as plt
 import os
 
 def featurize(X_train):
-
     GROUPBY_AGGREGATIONS = [
         {'groupby': ['ip','day','hour'], 'select': 'minute', 'agg': 'nunique'},
         {'groupby': ['ip','day','hour'], 'select': 'minute', 'agg': 'count'},
@@ -286,13 +268,35 @@ def DO(frm,to,fileno):
     # train_df = do_attributed_prob( train_df, ['os']); gc.collect()
     # train_df = do_attributed_prob( train_df, ['channel']); gc.collect()
 
-    train_df = featurize(train_df)
-    train_df = feat_ratio(train_df)
+    filename= 'groupedFeat_%d_%d.csv' % (frm, to)
+    original_features = set(['app', 'channel', 'click_id', 'click_time', 'device', 'ip',
+       'is_attributed', 'os', 'hour', 'day', 'minute', 'second'])
+    new_features = []
+    if os.path.exists(filename):
+        print('loading from saved file')
+        features_df = pd.read_csv(filename)
+        new_features.extend(features_df.columns)
+        print("loaded features")
+        print(new_features)
+        train_df = train_df.reset_index()
+        train_df = pd.concat([train_df, features_df ], axis=1)
+        del features_df
+        gc.collect()
+    else:
+        train_df = featurize(train_df)
+        train_df = feat_ratio(train_df)
+        new_features = set(train_df.columns) - original_features
+        print("new feawtures:")
+        print(new_features)
+        if True:
+            print('saving grouped features')
+            train_df[list(new_features)].to_csv(filename, header=True, index=False)
 
-    print(train_df.columns)
+    predictors=['app', 'channel', 'device', 'ip', 'os', 'hour'] # base
+    predictors.extend(new_features)
+
 
     print('doing nextClick')
-    predictors=[]
     
     new_feature = 'nextClick'
     filename='nextClick_%d_%d.csv'%(frm,to)
@@ -326,42 +330,14 @@ def DO(frm,to,fileno):
     train_df[new_feature+'_shift'] = train_df[new_feature].shift(+1).values
     predictors.append(new_feature+'_shift')
     
-    train_df.drop(['click_time', 'day'], axis=1, inplace=True)
+    train_df.drop(['click_time', 'day', 'minute', 'second'], axis=1, inplace=True)
+    print(train_df.columns)
+    gc.collect()
 
     del QQ
     gc.collect()
 
-    # train_df = do_var( train_df, ['ip'], 'nextClick', 'ip_nextClick_var', show_max=True ); gc.collect()
-
-    print("vars and data type: ")
-    # train_df.info()
-    # train_df['ip_tcount'] = train_df['ip_tcount'].astype('uint16')
-    # train_df['ip_app_count'] = train_df['ip_app_count'].astype('uint16')
-    # train_df['ip_app_os_count'] = train_df['ip_app_os_count'].astype('uint16')
-
-    print(train_df.columns)
-
-
     target = 'is_attributed'
-    # predictors.extend(['app','device','os', 'channel', 'hour', 
-    #               'ip_tcount', 'ip_tchan_count', 'ip_app_count',
-    #               'ip_app_os_count', 'ip_app_os_var',
-    #               'ip_app_channel_var_day','ip_app_channel_mean_hour',
-    #               'X0', 'X1', 'X2', 'X3', 'X4', 'X5', 'X6', 'X7', 'X8',
-    #               'ip_attributed_rate', 'app_attributed_rate', 'device_attributed_rate', 
-    #               'os_attributed_rate', 'channel_attributed_rate', 'ip_nextClick_var'])
-    predictors.extend(['app', 'channel', 'device', 'ip', 'os',
-       'hour', 'ip_day_hour_nunique_minute', 'ip_day_hour_count_minute',
-       'ip_day_hour_minute_nunique_second', 'ip_day_hour_minute_count_second',
-       'ip_day_device_count_click_time', 'ip_day_device_nunique_click_time',
-       'ip_day_device_count_app', 'ip_day_device_nunique_app',
-       'ip_day_device_nunique_os', 'ip_day_device_nunique_channel',
-       'ip_day_hour_minute_second_nunique_app',
-       'ip_day_hour_minute_second_count_app',
-       'ip_day_hour_minute_second_count_click_time',
-       'ip_day_hour_minute_second_count_os', 'ip_day_hour_count_click_time',
-       'ip_day_hour_minuteR', 'ip_day_hour_minute_secondR','ip_day_device_click_timeR','ip_day_device_appR','ip_day_device_appChannelR','ip_day_hour_minute_second_appR'
-       ])
     categorical = ['app', 'device', 'os', 'channel', 'hour']
     print('predictors',predictors)
 
@@ -411,11 +387,6 @@ def DO(frm,to,fileno):
     del val_df
     gc.collect()
 
-    if WHERE!='gcloud' and WHERE!='aws':
-        print('Plot feature importances...')
-        ax = lgb.plot_importance(bst, max_num_features=100)
-        plt.show()
-
     print("Predicting...")
     sub['is_attributed'] = bst.predict(test_df[predictors],num_iteration=best_iteration)
     if not debug:
@@ -424,8 +395,10 @@ def DO(frm,to,fileno):
     print("done...")
     return sub
 
+
+# size of training/test/validation
 nrows=184903891-1
-nchunk=25000000
+nchunk=20000000
 val_size=2500000
 
 frm=nrows-75000000
