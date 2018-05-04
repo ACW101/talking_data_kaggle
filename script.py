@@ -65,6 +65,18 @@ def featurize(X_train):
         del gp
         gc.collect()
     return X_train
+
+def feat_ratio(df):
+    print(df.columns)
+    df['ip_day_hour_minuteR'] = df['ip_day_hour_count_minute']/df['ip_day_hour_nunique_minute']
+    df['ip_day_hour_minute_secondR'] = df['ip_day_hour_minute_count_second']/df['ip_day_hour_minute_nunique_second']
+    df['ip_day_device_click_timeR'] = df['ip_day_device_count_click_time']/df['ip_day_device_nunique_click_time']
+    df['ip_day_device_appR'] = df['ip_day_device_count_app']/df['ip_day_device_nunique_app']
+    df['ip_day_device_appChannelR'] = df['ip_day_device_nunique_app']/df['ip_day_device_nunique_channel']
+    df['ip_day_hour_minute_second_appR'] = df['ip_day_hour_minute_second_nunique_app']/df['ip_day_hour_minute_second_count_app']
+    df['max_hour_click_count']= df.groupby(['ip','day','hour'])['ip_day_hour_count_click_time'].transform(max)
+    gc.collect()
+    return df
 	
 def do_count( df, group_cols, agg_name, agg_type='uint32', show_max=False, show_agg=True ):
     if show_agg:
@@ -126,15 +138,6 @@ def do_var( df, group_cols, counted, agg_name, agg_type='float32', show_max=Fals
     gc.collect()
     return( df )
 
-def feat_ratio(df):
-    print(df.columns)
-    df['ip_day_hour_minuteR'] = df['ip_day_hour_count_minute']/df['ip_day_hour_nunique_minute']
-    df['ip_day_hour_minute_secondR'] = df['ip_day_hour_minute_count_second']/df['ip_day_hour_minute_nunique_second']
-    df['ip_day_device_click_timeR'] = df['ip_day_device_count_click_time']/df['ip_day_device_nunique_click_time']
-    df['ip_day_device_appR'] = df['ip_day_device_count_app']/df['ip_day_device_nunique_app']
-    df['ip_day_device_appChannelR'] = df['ip_day_device_nunique_app']/df['ip_day_device_nunique_channel']
-    df['ip_day_hour_minute_second_appR'] = df['ip_day_hour_minute_second_nunique_app']/df['ip_day_hour_minute_second_count_app']
-    return df
 
 def do_attributed_prob(train_df, features):
     grouped = train_df.groupby(features)
@@ -153,7 +156,7 @@ def do_attributed_prob(train_df, features):
                 on=features, how='left'
             )
 
-debug=0 
+debug=1 
 if debug:
     print('*** debug parameter set: this is a test run for debugging purposes ***')
 
