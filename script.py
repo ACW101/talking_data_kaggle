@@ -152,6 +152,8 @@ def feat_ratio(df):
     df['ip_day_device_appR'] = df['ip_day_device_count_app']/df['ip_day_device_nunique_app']
     df['ip_day_device_appChannelR'] = df['ip_day_device_nunique_app']/df['ip_day_device_nunique_channel']
     df['ip_day_hour_minute_second_appR'] = df['ip_day_hour_minute_second_nunique_app']/df['ip_day_hour_minute_second_count_app']
+    df['max_hour_click_count']= df.groupby(['ip','day','hour'])['ip_day_hour_count_clicktime'].transform(max)
+    gc.collect()
     return df
 
 def do_attributed_prob(train_df, features):
