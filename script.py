@@ -180,7 +180,11 @@ if debug:
 def lgb_modelfit_nocv(params, dtrain, dvalid, predictors, target='target', objective='binary', metrics='auc',
                  feval=None, early_stopping_rounds=20, num_boost_round=3000, verbose_eval=10, categorical_features=None):
     lgb_params = {
-        'boosting_type': 'gbdt',
+        #'boosting_type': 'gbdt',
+	'boosting_type':'dart',
+	'device':'gpu',
+	'xgboost_dart_mode':true,
+	########
         'objective': objective,
         'metric':metrics,
         'learning_rate': 0.2,
